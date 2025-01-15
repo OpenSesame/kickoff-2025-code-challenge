@@ -1,60 +1,44 @@
 import "./style.css";
 
-const display = document.getElementById("display");
-const buttons = document.querySelectorAll("button");
+document.addEventListener("DOMContentLoaded", () => {
+  const display = document.getElementById("display");
+  const buttons = document.querySelectorAll(".button");
+  let lastOperation = false;
 
-let currentInput = "";
-let previousInput = "";
-let operator = null;
+  buttons.forEach((button) => {
+    button.addEventListener("click", () => {
+      const value = button.getAttribute("data-value");
 
-buttons.forEach((button) => {
-  button.addEventListener("click", (e) => {
-    const value = e.target.textContent;
-
-    if (value >= "0" && value <= "9") {
-      currentInput += value;
-      display.textContent = currentInput;
-    } else if (value === "C") {
-      currentInput = "";
-      previousInput = "";
-      operator = null;
-      display.textContent = "0";
-    } else if (value === ".") {
-      if (!currentInput.includes(".")) {
-        currentInput += ".";
-        display.textContent = currentInput;
+      if (value === "clear") {
+        display.value = "";
+      } else if (value === "=") {
+        try {
+          display.value = eval(display.value);
+          if (display.value === "Infinity") {
+            display.value = "Error";
+          }
+        } catch (error) {
+          display.value = "Invalid";
+        }
+        lastOperation = true;
+      } else if (["+", "-", "*", "/"].includes(value)) {
+        if (display.value === "") {
+          display.value += value;
+        } else if (!isNaN(display.value.slice(-1))) {
+          display.value += value;
+        }
+        lastOperation = false;
+      } else {
+        if (lastOperation) {
+          display.value = "";
+          lastOperation = false;
+        }
+        if (display.value.length > 10) {
+          display.value = "Error";
+        } else {
+          display.value += value;
+        }
       }
-    } else if (value === "=") {
-      if (operator && previousInput !== "") {
-        const result = calculate(
-          parseFloat(previousInput),
-          parseFloat(currentInput),
-          operator
-        );
-        display.textContent = result;
-        previousInput = result;
-        currentInput = "";
-      }
-    } else {
-      if (currentInput === "") return;
-      operator = value;
-      previousInput = currentInput;
-      currentInput = "";
-    }
+    });
   });
 });
-
-function calculate(num1, num2, operator) {
-  switch (operator) {
-    case "+":
-      return num1 + num2;
-    case "-":
-      return num1 - num2;
-    case "*":
-      return num1 * num2;
-    case "/":
-      return num2 === 0 ? "Error" : num1 / num2;
-    default:
-      return "NaN";
-  }
-}
